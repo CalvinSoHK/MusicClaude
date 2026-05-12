@@ -77,14 +77,56 @@ int32 USequencerWidget::NativePaint(
         }
     }
 
+    const float GridHeight = CellHeight * USequencerData::NumRows;
+    const int32 StepsPerBar = USequencerData::NumSteps / 4;
+
+    for (int32 Step = 0; Step < USequencerData::NumSteps; Step++)
+    {
+        const int32 BarPos = Step % StepsPerBar;
+
+        float LineThickness;
+        float LineAlpha;
+        if (BarPos == 0)
+        {
+            LineThickness = 2.5f;
+            LineAlpha = 0.55f;
+        }
+        else if (BarPos % 2 == 1)
+        {
+            LineThickness = 1.5f;
+            LineAlpha = 0.28f;
+        }
+        else
+        {
+            LineThickness = 1.0f;
+            LineAlpha = 0.12f;
+        }
+
+        const float LineX = Step * CellWidth;
+        TArray<FVector2f> DivPoints = {
+            FVector2f(LineX, 0.0f),
+            FVector2f(LineX, GridHeight)
+        };
+
+        FSlateDrawElement::MakeLines(
+            OutDrawElements, LayerId + 2,
+            AllottedGeometry.ToPaintGeometry(),
+            DivPoints,
+            ESlateDrawEffect::None,
+            FLinearColor(1.0f, 1.0f, 1.0f, LineAlpha),
+            true,
+            LineThickness
+        );
+    }
+
     const float PlayheadX = CurrentStep * CellWidth + CellWidth * 0.5f;
     TArray<FVector2f> LinePoints = {
         FVector2f(PlayheadX, 0.0f),
-        FVector2f(PlayheadX, CellHeight * USequencerData::NumRows)
+        FVector2f(PlayheadX, GridHeight)
     };
 
     FSlateDrawElement::MakeLines(
-        OutDrawElements, LayerId + 2,
+        OutDrawElements, LayerId + 3,
         AllottedGeometry.ToPaintGeometry(),
         LinePoints,
         ESlateDrawEffect::None,
@@ -93,7 +135,7 @@ int32 USequencerWidget::NativePaint(
         2.0f
     );
 
-    return LayerId + 2;
+    return LayerId + 3;
 }
 
 FReply USequencerWidget::NativeOnMouseButtonDown(

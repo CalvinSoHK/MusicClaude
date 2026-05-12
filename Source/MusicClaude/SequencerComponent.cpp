@@ -14,7 +14,7 @@ void USequencerComponent::BeginPlay()
 void USequencerComponent::StartSequencer(USequencerData* InData)
 {
     SequencerData = InData;
-    CurrentStep = 0;
+    CurrentStep = USequencerData::NumSteps - 1;
 
     GetWorld()->GetTimerManager().SetTimer(
         StepTimerHandle,
@@ -29,6 +29,8 @@ void USequencerComponent::AdvanceStep()
 {
     if (!SequencerData) return;
 
+    CurrentStep = (CurrentStep + 1) % USequencerData::NumSteps;
+
     for (int32 Row = 0; Row < USequencerData::NumRows; Row++)
     {
         if (SequencerData->GetStep(Row, CurrentStep))
@@ -36,6 +38,4 @@ void USequencerComponent::AdvanceStep()
             OnStepTriggered.Broadcast(Row, CurrentStep);
         }
     }
-
-    CurrentStep = (CurrentStep + 1) % USequencerData::NumSteps;
 }
