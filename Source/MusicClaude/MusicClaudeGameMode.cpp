@@ -3,12 +3,12 @@
 AMusicClaudeGameMode::AMusicClaudeGameMode()
 {
     SequencerComponent = CreateDefaultSubobject<USequencerComponent>(TEXT("SequencerComponent"));
+    SequencerData = CreateDefaultSubobject<USequencerData>(TEXT("SequencerData"));
 }
 
 void AMusicClaudeGameMode::BeginPlay()
 {
-    SequencerData = NewObject<USequencerData>(this);
-    SequencerComponent->StartSequencer(SequencerData);
-
     Super::BeginPlay();
+
+    SequencerComponent->StartSequencer(SequencerData);
 }

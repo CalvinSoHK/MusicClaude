@@ -25,6 +25,21 @@ void USequencerComponent::StartSequencer(USequencerData* InData)
     );
 }
 
+void USequencerComponent::ResetPlayback()
+{
+    if (!SequencerData) return;
+
+    GetWorld()->GetTimerManager().ClearTimer(StepTimerHandle);
+    CurrentStep = USequencerData::NumSteps - 1;
+    GetWorld()->GetTimerManager().SetTimer(
+        StepTimerHandle,
+        this,
+        &USequencerComponent::AdvanceStep,
+        SequencerData->GetStepIntervalSeconds(),
+        true
+    );
+}
+
 void USequencerComponent::AdvanceStep()
 {
     if (!SequencerData) return;

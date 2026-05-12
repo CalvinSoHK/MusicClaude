@@ -23,6 +23,9 @@ public:
 
     void StartSequencer(USequencerData* InData);
 
+    UFUNCTION(BlueprintCallable)
+    void ResetPlayback();
+
 protected:
     virtual void BeginPlay() override;
 
