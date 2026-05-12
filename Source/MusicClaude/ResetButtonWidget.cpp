@@ -2,7 +2,7 @@
 
 void UResetButtonWidget::ResetSequencer()
 {
-    if (SequencerComponent)
+    if (IsValid(SequencerComponent))
     {
         SequencerComponent->ResetPlayback();
     }

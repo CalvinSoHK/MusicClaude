@@ -27,5 +27,8 @@ public:
     UFUNCTION(BlueprintCallable)
     bool GetStep(int32 Row, int32 Step) const;
 
+    UFUNCTION(BlueprintCallable)
+    void ClearGrid();
+
     float GetStepIntervalSeconds() const;
 };

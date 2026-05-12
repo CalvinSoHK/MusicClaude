@@ -2,7 +2,7 @@
 
 # Project Goal
 
-Build a simple music game in Unreal Engine to showcase Claude + UE collaboration.
+Build a simple music game in Unreal Engine 5.4.4 to showcase Claude + UE collaboration.
 
 ## Concept
 
@@ -30,14 +30,15 @@ UUserWidget
      |                               unified InitWidget (BlueprintNativeEvent)
      ├─ USequencerWidget           — custom-painted step grid; mouse input, playhead, grid lines
      └─ UBaseButtonWidget          — base for all sequencer action buttons (empty for now)
-          └─ UResetButtonWidget    — exposes ResetSequencer(); calls ResetPlayback()
+          ├─ UResetButtonWidget    — exposes ResetSequencer(); calls ResetPlayback()
+          └─ UClearButtonWidget    — exposes ClearSequencer(); calls ClearGrid()
 
 UActorComponent
   └─ USequencerComponent          — owns the step timer; advances CurrentStep;
                                      broadcasts OnStepAdvanced (every step) and
                                      OnStepTriggered (active notes only); ResetPlayback()
 UObject
-  └─ USequencerData               — 4×32 bool grid; BPM; ToggleStep/GetStep;
+  └─ USequencerData               — 4×32 bool grid; BPM; ToggleStep/GetStep/ClearGrid;
                                      GetStepIntervalSeconds(); BlueprintType
 AGameMode
   └─ AMusicClaudeGameMode         — creates SequencerComponent via CreateDefaultSubobject;
@@ -55,6 +56,7 @@ AGameMode
 | `BaseWidget.h/.cpp` | Shared widget base with InitWidget |
 | `BaseButtonWidget.h/.cpp` | Button widget base (empty, for future buttons) |
 | `ResetButtonWidget.h/.cpp` | Reset playback button |
+| `ClearButtonWidget.h/.cpp` | Clear all grid nodes button |
 | `MusicClaudeGameMode.h/.cpp` | Game mode, wires data + component together |
 
 ### Audio Trigger Chain
@@ -72,8 +74,10 @@ AGameMode
 
 All widgets call `InitWidget(USequencerData*, USequencerComponent*)` inherited from
 `UBaseWidget`. Pass `nullptr` for `SequencerData` on widgets that don't need grid data
-(e.g. buttons). `USequencerWidget` overrides `InitWidget_Implementation` to also bind
-both `OnStepTriggered` and `OnStepAdvanced` delegates.
+(e.g. buttons — both `UResetButtonWidget` and `UClearButtonWidget` only need
+`SequencerComponent` and `SequencerData` respectively, and receive `None` for the other).
+`USequencerWidget` overrides `InitWidget_Implementation` to also bind both `OnStepTriggered`
+and `OnStepAdvanced` delegates.
 
 Call site is `BP_MusicClaudeGameMode`'s Blueprint Event Graph: after `Parent: BeginPlay`,
 the game mode creates `WBP_SequencerScreen`, adds it to viewport, then calls
@@ -97,4 +101,5 @@ Initialization order guarantee: `SequencerData` is created via `NewObject` befor
 | `WBP_Sequencer` | Extends `USequencerWidget`; handles `OnStepFired` for audio playback |
 | `WBP_SequencerScreen` | Top-level HUD; hosts grid + button widgets; calls `InitWidget` on all |
 | `WBP_ResetButton` | Extends `UResetButtonWidget`; button wired to `ResetSequencer()` |
+| `WBP_ClearButton` | Extends `UClearButtonWidget`; button wired to `ClearSequencer()` |
 | `Rock_Kick/Snare/Hat/Tom_Cue` | Sound cues for each instrument row |

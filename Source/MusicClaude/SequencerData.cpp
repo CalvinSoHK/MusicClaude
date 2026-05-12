@@ -17,6 +17,11 @@ bool USequencerData::GetStep(int32 Row, int32 Step) const
     return false;
 }
 
+void USequencerData::ClearGrid()
+{
+    FMemory::Memzero(Grid, sizeof(Grid));
+}
+
 float USequencerData::GetStepIntervalSeconds() const
 {
     // 8th note interval at current BPM
