@@ -1,5 +1,5 @@
 #include "SequencerWidget.h"
-#include "Styling/CoreStyle.h"
+#include "Styling/SlateBrush.h"
 
 const FLinearColor USequencerWidget::RowColors[USequencerData::NumRows] = {
     FLinearColor(0.8f, 0.1f, 0.1f),
@@ -23,7 +23,7 @@ int32 USequencerWidget::NativePaint(
     const FWidgetStyle& InWidgetStyle,
     bool bParentEnabled) const
 {
-    const FSlateBrush* WhiteBrush = FCoreStyle::Get().GetBrush("WhiteTexture");
+    static const FSlateColorBrush WhiteBrush(FLinearColor::White);
     const int32 CurrentStep = SequencerComponent ? SequencerComponent->CurrentStep : 0;
 
     FSlateDrawElement::MakeBox(
@@ -31,7 +31,7 @@ int32 USequencerWidget::NativePaint(
         AllottedGeometry.ToPaintGeometry(
             FVector2D::ZeroVector,
             FVector2D(CellWidth * USequencerData::NumSteps, CellHeight * USequencerData::NumRows)),
-        WhiteBrush,
+        &WhiteBrush,
         ESlateDrawEffect::None,
         FLinearColor(0.05f, 0.05f, 0.05f)
     );
@@ -64,7 +64,7 @@ int32 USequencerWidget::NativePaint(
             FSlateDrawElement::MakeBox(
                 OutDrawElements, LayerId + 1,
                 AllottedGeometry.ToPaintGeometry(FVector2D(X + 1.0f, Y + 1.0f), FVector2D(CellWidth - 2.0f, CellHeight - 2.0f)),
-                WhiteBrush,
+                &WhiteBrush,
                 ESlateDrawEffect::None,
                 CellColor
             );

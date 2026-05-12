@@ -31,7 +31,8 @@ UUserWidget
      ├─ USequencerWidget           — custom-painted step grid; mouse input, playhead, grid lines
      └─ UBaseButtonWidget          — base for all sequencer action buttons (empty for now)
           ├─ UResetButtonWidget    — exposes ResetSequencer(); calls ResetPlayback()
-          └─ UClearButtonWidget    — exposes ClearSequencer(); calls ClearGrid()
+          ├─ UClearButtonWidget    — exposes ClearSequencer(); calls ClearGrid()
+          └─ UQuitButtonWidget     — exposes QuitGame(); calls UKismetSystemLibrary::QuitGame()
 
 UActorComponent
   └─ USequencerComponent          — owns the step timer; advances CurrentStep;
@@ -57,6 +58,7 @@ AGameMode
 | `BaseButtonWidget.h/.cpp` | Button widget base (empty, for future buttons) |
 | `ResetButtonWidget.h/.cpp` | Reset playback button |
 | `ClearButtonWidget.h/.cpp` | Clear all grid nodes button |
+| `QuitButtonWidget.h/.cpp` | Quit application button |
 | `MusicClaudeGameMode.h/.cpp` | Game mode, wires data + component together |
 
 ### Audio Trigger Chain
@@ -93,13 +95,14 @@ Initialization order guarantee: `SequencerData` is created via `NewObject` befor
 - Cell size: 40×60px; 4 bars, 8 steps per bar (8th-note resolution)
 - Grid lines: bar start (2.5px bold), half-beat (1.5px mid), downbeat (1.0px pale)
 
-### Blueprint Assets (Content/MusicClaude/)
+### Blueprint Assets
 
-| Asset | Purpose |
+| Asset path | Purpose |
 |---|---|
-| `BP_MusicClaudeGameMode` | Blueprint subclass of `AMusicClaudeGameMode` |
-| `WBP_Sequencer` | Extends `USequencerWidget`; handles `OnStepFired` for audio playback |
-| `WBP_SequencerScreen` | Top-level HUD; hosts grid + button widgets; calls `InitWidget` on all |
-| `WBP_ResetButton` | Extends `UResetButtonWidget`; button wired to `ResetSequencer()` |
-| `WBP_ClearButton` | Extends `UClearButtonWidget`; button wired to `ClearSequencer()` |
-| `Rock_Kick/Snare/Hat/Tom_Cue` | Sound cues for each instrument row |
+| `Content/MusicClaude/BP_MusicClaudeGameMode` | Blueprint subclass of `AMusicClaudeGameMode` |
+| `Content/MusicClaude/Widgets/WBP_Sequencer` | Extends `USequencerWidget`; handles `OnStepFired` for audio playback |
+| `Content/MusicClaude/Widgets/WBP_SequencerScreen` | Top-level HUD; hosts grid + button widgets; calls `InitWidget` on all |
+| `Content/MusicClaude/Widgets/WBP_ResetButton` | Extends `UResetButtonWidget`; button wired to `ResetSequencer()` |
+| `Content/MusicClaude/Widgets/WBP_ClearButton` | Extends `UClearButtonWidget`; button wired to `ClearSequencer()` |
+| `Content/MusicClaude/Widgets/WBP_QuitButton` | Extends `UQuitButtonWidget`; button wired to `QuitGame()` |
+| `Content/MusicClaude/Rock_Kick/Snare/Hat/Tom_Cue` | Sound cues for each instrument row |
