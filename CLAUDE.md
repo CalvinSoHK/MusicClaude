@@ -34,13 +34,15 @@ UUserWidget
 
 UActorComponent
   └─ USequencerComponent          — owns the step timer; advances CurrentStep;
-                                     broadcasts OnStepTriggered delegate; ResetPlayback()
+                                     broadcasts OnStepAdvanced (every step) and
+                                     OnStepTriggered (active notes only); ResetPlayback()
 UObject
   └─ USequencerData               — 4×32 bool grid; BPM; ToggleStep/GetStep;
-                                     GetStepIntervalSeconds()
+                                     GetStepIntervalSeconds(); BlueprintType
 AGameMode
-  └─ AMusicClaudeGameMode         — creates SequencerData + SequencerComponent via
-                                     CreateDefaultSubobject; calls StartSequencer in BeginPlay
+  └─ AMusicClaudeGameMode         — creates SequencerComponent via CreateDefaultSubobject;
+                                     creates SequencerData via NewObject in BeginPlay
+                                     (before Super::BeginPlay); calls StartSequencer after
 ```
 
 ### Key Source Files
@@ -59,18 +61,27 @@ AGameMode
 
 1. `USequencerComponent` timer fires `AdvanceStep()` every `GetStepIntervalSeconds()`
    (60 / BPM / 2 for 8th notes at 120 BPM)
-2. `CurrentStep` advances first, then active nodes at that step broadcast
-   `OnStepTriggered(Row, Step)`
-3. `USequencerWidget` receives the delegate, calls `OnStepFired(Row, Step)`
+2. `CurrentStep` advances, then `OnStepAdvanced(Step)` broadcasts unconditionally
+   (used by `USequencerWidget` to repaint the playhead on every step)
+3. Active nodes at that step broadcast `OnStepTriggered(Row, Step)`
+4. `USequencerWidget` receives `OnStepTriggered`, calls `OnStepFired(Row, Step)`
    (BlueprintImplementableEvent)
-4. `WBP_Sequencer` Blueprint handles `OnStepFired` and plays the corresponding audio cue
+5. `WBP_Sequencer` Blueprint handles `OnStepFired` and plays the corresponding audio cue
 
 ### Widget Initialization Pattern
 
 All widgets call `InitWidget(USequencerData*, USequencerComponent*)` inherited from
 `UBaseWidget`. Pass `nullptr` for `SequencerData` on widgets that don't need grid data
-(e.g. buttons). `USequencerWidget` overrides `InitWidget_Implementation` to also bind the
-`OnStepTriggered` delegate. Call site is `WBP_SequencerScreen`'s Event Graph.
+(e.g. buttons). `USequencerWidget` overrides `InitWidget_Implementation` to also bind
+both `OnStepTriggered` and `OnStepAdvanced` delegates.
+
+Call site is `BP_MusicClaudeGameMode`'s Blueprint Event Graph: after `Parent: BeginPlay`,
+the game mode creates `WBP_SequencerScreen`, adds it to viewport, then calls
+`SetupSequencer` (a Blueprint function on `WBP_SequencerScreen`) which forwards
+`SequencerData` and `SequencerComponent` to `InitWidget` on each child widget.
+
+Initialization order guarantee: `SequencerData` is created via `NewObject` before
+`Super::BeginPlay()` in C++, ensuring it is valid when Blueprint's Event BeginPlay fires.
 
 ### Grid Layout
 
