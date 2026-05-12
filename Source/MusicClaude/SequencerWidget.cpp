@@ -14,12 +14,6 @@ void USequencerWidget::NativeConstruct()
     SetIsFocusable(true);
 }
 
-void USequencerWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
-{
-    Super::NativeTick(MyGeometry, InDeltaTime);
-    Invalidate(EInvalidateWidgetReason::Paint);
-}
-
 int32 USequencerWidget::NativePaint(
     const FPaintArgs& Args,
     const FGeometry& AllottedGeometry,
@@ -154,11 +148,12 @@ FReply USequencerWidget::NativeOnMouseButtonDown(
     return FReply::Handled();
 }
 
-void USequencerWidget::InitWidget(USequencerData* InData, USequencerComponent* InComponent)
+void USequencerWidget::InitWidget_Implementation(USequencerData* InData, USequencerComponent* InComponent)
 {
-    SequencerData = InData;
-    SequencerComponent = InComponent;
+    Super::InitWidget_Implementation(InData, InComponent);
+    if (!SequencerComponent) return;
     SequencerComponent->OnStepTriggered.AddDynamic(this, &USequencerWidget::HandleStepTriggered);
+    SequencerComponent->OnStepAdvanced.AddDynamic(this, &USequencerWidget::HandleStepAdvanced);
 }
 
 void USequencerWidget::ToggleStep(int32 Row, int32 Step)
@@ -166,6 +161,7 @@ void USequencerWidget::ToggleStep(int32 Row, int32 Step)
     if (SequencerData)
     {
         SequencerData->ToggleStep(Row, Step);
+        Invalidate(EInvalidateWidgetReason::Paint);
     }
 }
 
@@ -183,11 +179,17 @@ void USequencerWidget::HandleStepTriggered(int32 Row, int32 Step)
     OnStepFired(Row, Step);
 }
 
+void USequencerWidget::HandleStepAdvanced(int32 Step)
+{
+    Invalidate(EInvalidateWidgetReason::Paint);
+}
+
 void USequencerWidget::NativeDestruct()
 {
     if (SequencerComponent)
     {
         SequencerComponent->OnStepTriggered.RemoveDynamic(this, &USequencerWidget::HandleStepTriggered);
+        SequencerComponent->OnStepAdvanced.RemoveDynamic(this, &USequencerWidget::HandleStepAdvanced);
     }
     Super::NativeDestruct();
 }

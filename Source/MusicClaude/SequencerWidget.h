@@ -1,14 +1,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blueprint/UserWidget.h"
+#include "BaseWidget.h"
 #include "Rendering/DrawElements.h"
-#include "SequencerData.h"
-#include "SequencerComponent.h"
 #include "SequencerWidget.generated.h"
 
 UCLASS()
-class MUSICCLAUDE_API USequencerWidget : public UUserWidget
+class MUSICCLAUDE_API USequencerWidget : public UBaseWidget
 {
     GENERATED_BODY()
 
@@ -16,8 +14,7 @@ public:
     static constexpr float CellWidth = 40.0f;
     static constexpr float CellHeight = 60.0f;
 
-    UFUNCTION(BlueprintCallable)
-    void InitWidget(USequencerData* InData, USequencerComponent* InComponent);
+    virtual void InitWidget_Implementation(USequencerData* InData, USequencerComponent* InComponent) override;
 
     UFUNCTION(BlueprintCallable)
     void ToggleStep(int32 Row, int32 Step);
@@ -30,7 +27,6 @@ public:
 
 protected:
     virtual void NativeConstruct() override;
-    virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
     virtual int32 NativePaint(
         const FPaintArgs& Args,
         const FGeometry& AllottedGeometry,
@@ -45,14 +41,11 @@ protected:
     virtual void NativeDestruct() override;
 
 private:
-    UPROPERTY()
-    USequencerData* SequencerData = nullptr;
-
-    UPROPERTY()
-    USequencerComponent* SequencerComponent = nullptr;
-
     static const FLinearColor RowColors[USequencerData::NumRows];
 
     UFUNCTION()
     void HandleStepTriggered(int32 Row, int32 Step);
+
+    UFUNCTION()
+    void HandleStepAdvanced(int32 Step);
 };

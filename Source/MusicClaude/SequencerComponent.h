@@ -5,6 +5,7 @@
 #include "SequencerData.h"
 #include "SequencerComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStepAdvanced, int32, Step);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStepTriggered, int32, Row, int32, Step);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
@@ -14,6 +15,9 @@ class MUSICCLAUDE_API USequencerComponent : public UActorComponent
 
 public:
     USequencerComponent();
+
+    UPROPERTY(BlueprintAssignable)
+    FOnStepAdvanced OnStepAdvanced;
 
     UPROPERTY(BlueprintAssignable)
     FOnStepTriggered OnStepTriggered;

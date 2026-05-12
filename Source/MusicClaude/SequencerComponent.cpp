@@ -13,6 +13,8 @@ void USequencerComponent::BeginPlay()
 
 void USequencerComponent::StartSequencer(USequencerData* InData)
 {
+    if (!InData) return;
+
     SequencerData = InData;
     CurrentStep = USequencerData::NumSteps - 1;
 
@@ -45,6 +47,8 @@ void USequencerComponent::AdvanceStep()
     if (!SequencerData) return;
 
     CurrentStep = (CurrentStep + 1) % USequencerData::NumSteps;
+
+    OnStepAdvanced.Broadcast(CurrentStep);
 
     for (int32 Row = 0; Row < USequencerData::NumRows; Row++)
     {

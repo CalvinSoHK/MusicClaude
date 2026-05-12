@@ -4,7 +4,7 @@
 #include "UObject/NoExportTypes.h"
 #include "SequencerData.generated.h"
 
-UCLASS()
+UCLASS(BlueprintType)
 class MUSICCLAUDE_API USequencerData : public UObject
 {
     GENERATED_BODY()
