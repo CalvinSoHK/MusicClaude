@@ -28,7 +28,7 @@ A DAW-style sequencer game (similar to FL Studio's piano roll/step sequencer):
 UUserWidget
   └─ UBaseWidget                  — shared SequencerData + SequencerComponent refs;
      |                               unified InitWidget (BlueprintNativeEvent)
-     ├─ USequencerWidget           — custom-painted step grid; mouse input, playhead, grid lines
+     ├─ USequencerWidget           — custom-painted step grid; instrument labels, mouse input, playhead, grid lines
      └─ UBaseButtonWidget          — base for all sequencer action buttons (empty for now)
           ├─ UResetButtonWidget    — exposes ResetSequencer(); calls ResetPlayback()
           ├─ UClearButtonWidget    — exposes ClearSequencer(); calls ClearGrid()
@@ -53,7 +53,7 @@ AGameMode
 |---|---|
 | `SequencerData.h/.cpp` | Grid state, BPM, step interval calculation |
 | `SequencerComponent.h/.cpp` | Timer loop, step advancement, audio delegate, reset |
-| `SequencerWidget.h/.cpp` | Custom Slate paint, grid lines, playhead, mouse input |
+| `SequencerWidget.h/.cpp` | Custom Slate paint, instrument labels, grid lines, playhead, mouse input |
 | `BaseWidget.h/.cpp` | Shared widget base with InitWidget |
 | `BaseButtonWidget.h/.cpp` | Button widget base (empty, for future buttons) |
 | `ResetButtonWidget.h/.cpp` | Reset playback button |
@@ -91,9 +91,11 @@ Initialization order guarantee: `SequencerData` is created via `NewObject` befor
 
 ### Grid Layout
 
-- 4 rows (Kick, Snare, HiHat, Tom) × 32 steps
+- 4 rows (Kick, Snare, Tom, HiHat) × 32 steps
+- Label column: 120px wide; instrument names painted via `FCoreStyle` at 24pt, left of the grid
 - Cell size: 40×60px; 4 bars, 8 steps per bar (8th-note resolution)
 - Grid lines: bar start (2.5px bold), half-beat (1.5px mid), downbeat (1.0px pale)
+- `"Slate"` module required in `MusicClaude.Build.cs` for `FCoreStyle` (`Styling/CoreStyle.h`)
 
 ### Blueprint Assets
 

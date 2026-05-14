@@ -13,6 +13,7 @@ class MUSICCLAUDE_API USequencerWidget : public UBaseWidget
 public:
     static constexpr float CellWidth = 40.0f;
     static constexpr float CellHeight = 60.0f;
+    static constexpr float LabelWidth = 120.0f;
 
     virtual void InitWidget_Implementation(USequencerData* InData, USequencerComponent* InComponent) override;
 
@@ -42,6 +43,7 @@ protected:
 
 private:
     static const FLinearColor RowColors[USequencerData::NumRows];
+    static const FString RowLabels[USequencerData::NumRows];
 
     UFUNCTION()
     void HandleStepTriggered(int32 Row, int32 Step);

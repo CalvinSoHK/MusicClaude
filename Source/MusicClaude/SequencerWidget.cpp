@@ -1,5 +1,13 @@
 #include "SequencerWidget.h"
 #include "Styling/SlateBrush.h"
+#include "Styling/CoreStyle.h"
+
+const FString USequencerWidget::RowLabels[USequencerData::NumRows] = {
+    TEXT("Kick"),
+    TEXT("Snare"),
+    TEXT("Tom"),
+    TEXT("HiHat"),
+};
 
 const FLinearColor USequencerWidget::RowColors[USequencerData::NumRows] = {
     FLinearColor(0.8f, 0.1f, 0.1f),
@@ -30,17 +38,34 @@ int32 USequencerWidget::NativePaint(
         OutDrawElements, LayerId,
         AllottedGeometry.ToPaintGeometry(
             FVector2D::ZeroVector,
-            FVector2D(CellWidth * USequencerData::NumSteps, CellHeight * USequencerData::NumRows)),
+            FVector2D(LabelWidth + CellWidth * USequencerData::NumSteps, CellHeight * USequencerData::NumRows)),
         &WhiteBrush,
         ESlateDrawEffect::None,
         FLinearColor(0.05f, 0.05f, 0.05f)
     );
 
+    FSlateFontInfo LabelFont = FCoreStyle::Get().GetFontStyle("SmallFont");
+    LabelFont.Size = 24;
+    for (int32 Row = 0; Row < USequencerData::NumRows; Row++)
+    {
+        FSlateDrawElement::MakeText(
+            OutDrawElements, LayerId + 1,
+            AllottedGeometry.ToPaintGeometry(
+                FVector2D(4.0f, Row * CellHeight),
+                FVector2D(LabelWidth - 4.0f, CellHeight)
+            ),
+            RowLabels[Row],
+            LabelFont,
+            ESlateDrawEffect::None,
+            FLinearColor(0.85f, 0.85f, 0.85f)
+        );
+    }
+
     for (int32 Row = 0; Row < USequencerData::NumRows; Row++)
     {
         for (int32 Step = 0; Step < USequencerData::NumSteps; Step++)
         {
-            const float X = Step * CellWidth;
+            const float X = LabelWidth + Step * CellWidth;
             const float Y = Row * CellHeight;
             const bool bActive = SequencerData && SequencerData->GetStep(Row, Step);
             const bool bIsPlayhead = (Step == CurrentStep);
@@ -62,7 +87,7 @@ int32 USequencerWidget::NativePaint(
             }
 
             FSlateDrawElement::MakeBox(
-                OutDrawElements, LayerId + 1,
+                OutDrawElements, LayerId + 2,
                 AllottedGeometry.ToPaintGeometry(FVector2D(X + 1.0f, Y + 1.0f), FVector2D(CellWidth - 2.0f, CellHeight - 2.0f)),
                 &WhiteBrush,
                 ESlateDrawEffect::None,
@@ -96,14 +121,14 @@ int32 USequencerWidget::NativePaint(
             LineAlpha = 0.12f;
         }
 
-        const float LineX = Step * CellWidth;
+        const float LineX = LabelWidth + Step * CellWidth;
         TArray<FVector2f> DivPoints = {
             FVector2f(LineX, 0.0f),
             FVector2f(LineX, GridHeight)
         };
 
         FSlateDrawElement::MakeLines(
-            OutDrawElements, LayerId + 2,
+            OutDrawElements, LayerId + 3,
             AllottedGeometry.ToPaintGeometry(),
             DivPoints,
             ESlateDrawEffect::None,
@@ -113,14 +138,14 @@ int32 USequencerWidget::NativePaint(
         );
     }
 
-    const float PlayheadX = CurrentStep * CellWidth + CellWidth * 0.5f;
+    const float PlayheadX = LabelWidth + CurrentStep * CellWidth + CellWidth * 0.5f;
     TArray<FVector2f> LinePoints = {
         FVector2f(PlayheadX, 0.0f),
         FVector2f(PlayheadX, GridHeight)
     };
 
     FSlateDrawElement::MakeLines(
-        OutDrawElements, LayerId + 3,
+        OutDrawElements, LayerId + 4,
         AllottedGeometry.ToPaintGeometry(),
         LinePoints,
         ESlateDrawEffect::None,
@@ -129,7 +154,7 @@ int32 USequencerWidget::NativePaint(
         2.0f
     );
 
-    return LayerId + 3;
+    return LayerId + 4;
 }
 
 FReply USequencerWidget::NativeOnMouseButtonDown(
@@ -137,7 +162,11 @@ FReply USequencerWidget::NativeOnMouseButtonDown(
     const FPointerEvent& InMouseEvent)
 {
     const FVector2D LocalPos = InGeometry.AbsoluteToLocal(InMouseEvent.GetScreenSpacePosition());
-    const int32 Col = FMath::FloorToInt(LocalPos.X / CellWidth);
+
+    if (LocalPos.X < LabelWidth)
+        return FReply::Handled();
+
+    const int32 Col = FMath::FloorToInt((LocalPos.X - LabelWidth) / CellWidth);
     const int32 Row = FMath::FloorToInt(LocalPos.Y / CellHeight);
 
     if (Col >= 0 && Col < USequencerData::NumSteps && Row >= 0 && Row < USequencerData::NumRows)
