@@ -28,19 +28,25 @@ A DAW-style sequencer game (similar to FL Studio's piano roll/step sequencer):
 UUserWidget
   └─ UBaseWidget                  — shared SequencerData + SequencerComponent refs;
      |                               unified InitWidget (BlueprintNativeEvent)
-     ├─ USequencerWidget           — custom-painted step grid; instrument labels, mouse input, playhead, grid lines
-     └─ UBaseButtonWidget          — base for all sequencer action buttons (empty for now)
+     ├─ USequencerWidget           — custom-painted step grid; instrument labels, mouse input, playhead, grid lines;
+     |                               binds OnStepTriggered → HandleStepTriggered → OnStepFired (BlueprintImplementableEvent)
+     |                               binds OnStepAdvanced → HandleStepAdvanced (repaint)
+     |                               binds OnGridCleared → HandleGridCleared (repaint)
+     └─ UBaseButtonWidget          — extension point for shared button behavior; empty until two or more
+          |                           subclasses need common logic
           ├─ UResetButtonWidget    — exposes ResetSequencer(); calls ResetPlayback()
           ├─ UClearButtonWidget    — exposes ClearSequencer(); calls ClearGrid()
           └─ UQuitButtonWidget     — exposes QuitGame(); calls UKismetSystemLibrary::QuitGame()
 
 UActorComponent
-  └─ USequencerComponent          — owns the step timer; advances CurrentStep;
+  └─ USequencerComponent          — owns the step timer; advances CurrentStep (private, read via GetCurrentStep());
                                      broadcasts OnStepAdvanced (every step) and
-                                     OnStepTriggered (active notes only); ResetPlayback()
+                                     OnStepTriggered (active notes only);
+                                     StartSequencer() and ResetPlayback() both delegate to RestartTimer()
 UObject
-  └─ USequencerData               — 4×32 bool grid; BPM; ToggleStep/GetStep/ClearGrid;
-                                     GetStepIntervalSeconds(); BlueprintType
+  └─ USequencerData               — flat TArray<bool> grid (NumRows × NumSteps, row-major);
+                                     BPM; ToggleStep/GetStep/ClearGrid; GetStepIntervalSeconds();
+                                     broadcasts OnGridCleared after ClearGrid(); BlueprintType
 AGameMode
   └─ AMusicClaudeGameMode         — creates SequencerComponent via CreateDefaultSubobject;
                                      creates SequencerData via NewObject in BeginPlay
@@ -66,20 +72,31 @@ AGameMode
 1. `USequencerComponent` timer fires `AdvanceStep()` every `GetStepIntervalSeconds()`
    (60 / BPM / 2 for 8th notes at 120 BPM)
 2. `CurrentStep` advances, then `OnStepAdvanced(Step)` broadcasts unconditionally
-   (used by `USequencerWidget` to repaint the playhead on every step)
+   (bound to `HandleStepAdvanced` on `USequencerWidget`, which calls `Invalidate(Paint)`)
 3. Active nodes at that step broadcast `OnStepTriggered(Row, Step)`
-4. `USequencerWidget` receives `OnStepTriggered`, calls `OnStepFired(Row, Step)`
-   (BlueprintImplementableEvent)
+4. `USequencerWidget::HandleStepTriggered` receives the broadcast and calls `OnStepFired(Row, Step)`
+   (`BlueprintImplementableEvent` — the intermediate handler keeps binding pattern consistent)
 5. `WBP_Sequencer` Blueprint handles `OnStepFired` and plays the corresponding audio cue
+
+### Clear Trigger Chain
+
+1. Blueprint calls `UClearButtonWidget::ClearSequencer()`
+2. `USequencerData::ClearGrid()` zeroes the grid, then broadcasts `OnGridCleared`
+3. `USequencerWidget::HandleGridCleared` receives the broadcast and calls `Invalidate(Paint)`
+   (ensures the grid repaints immediately even when the sequencer is paused)
 
 ### Widget Initialization Pattern
 
 All widgets call `InitWidget(USequencerData*, USequencerComponent*)` inherited from
-`UBaseWidget`. Pass `nullptr` for `SequencerData` on widgets that don't need grid data
-(e.g. buttons — both `UResetButtonWidget` and `UClearButtonWidget` only need
-`SequencerComponent` and `SequencerData` respectively, and receive `None` for the other).
-`USequencerWidget` overrides `InitWidget_Implementation` to also bind both `OnStepTriggered`
-and `OnStepAdvanced` delegates.
+`UBaseWidget`. The signature is uniform across all widgets; pass `nullptr` for whichever
+dependency a widget does not use (e.g. button widgets receive `nullptr` for one or both).
+
+`USequencerWidget` overrides `InitWidget_Implementation` to bind three delegates:
+- `SequencerData->OnGridCleared` → `HandleGridCleared`
+- `SequencerComponent->OnStepTriggered` → `HandleStepTriggered`
+- `SequencerComponent->OnStepAdvanced` → `HandleStepAdvanced`
+
+All three are unbound symmetrically in `NativeDestruct`.
 
 Call site is `BP_MusicClaudeGameMode`'s Blueprint Event Graph: after `Parent: BeginPlay`,
 the game mode creates `WBP_SequencerScreen`, adds it to viewport, then calls
@@ -88,14 +105,22 @@ the game mode creates `WBP_SequencerScreen`, adds it to viewport, then calls
 
 Initialization order guarantee: `SequencerData` is created via `NewObject` before
 `Super::BeginPlay()` in C++, ensuring it is valid when Blueprint's Event BeginPlay fires.
+(Blueprint's Event BeginPlay executes inside `Super::BeginPlay`, so data must exist first.)
 
 ### Grid Layout
 
 - 4 rows (Kick, Snare, Tom, HiHat) × 32 steps
+- Grid state stored as flat `TArray<bool>` in `USequencerData`; index = `Row * NumSteps + Step`
+- Row display data (label + color) coupled in a `FRowStyle` struct array on `USequencerWidget`
 - Label column: 120px wide; instrument names painted via `FCoreStyle` at 24pt, left of the grid
 - Cell size: 40×60px; 4 bars, 8 steps per bar (8th-note resolution)
 - Grid lines: bar start (2.5px bold), half-beat (1.5px mid), downbeat (1.0px pale)
 - `"Slate"` module required in `MusicClaude.Build.cs` for `FCoreStyle` (`Styling/CoreStyle.h`)
+
+### Module Conventions
+
+- Log category: `LogMusicClaude` — declared in `MusicClaude.h`, defined in `MusicClaude.cpp`; use instead of `LogTemp` in all source files
+- Game mode fields (`SequencerData`, `SequencerComponent`) are `protected UPROPERTY(BlueprintReadOnly)` — readable from Blueprint, not writable from external C++
 
 ### Blueprint Assets
 

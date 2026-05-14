@@ -2,18 +2,11 @@
 #include "Styling/SlateBrush.h"
 #include "Styling/CoreStyle.h"
 
-const FString USequencerWidget::RowLabels[USequencerData::NumRows] = {
-    TEXT("Kick"),
-    TEXT("Snare"),
-    TEXT("Tom"),
-    TEXT("HiHat"),
-};
-
-const FLinearColor USequencerWidget::RowColors[USequencerData::NumRows] = {
-    FLinearColor(0.8f, 0.1f, 0.1f),
-    FLinearColor(0.1f, 0.3f, 0.9f),
-    FLinearColor(0.9f, 0.8f, 0.1f),
-    FLinearColor(0.1f, 0.7f, 0.2f),
+const USequencerWidget::FRowStyle USequencerWidget::RowStyles[USequencerData::NumRows] = {
+    { TEXT("Kick"),  FLinearColor(0.8f, 0.1f, 0.1f) },
+    { TEXT("Snare"), FLinearColor(0.1f, 0.3f, 0.9f) },
+    { TEXT("Tom"),   FLinearColor(0.9f, 0.8f, 0.1f) },
+    { TEXT("HiHat"), FLinearColor(0.1f, 0.7f, 0.2f) },
 };
 
 void USequencerWidget::NativeConstruct()
@@ -32,7 +25,7 @@ int32 USequencerWidget::NativePaint(
     bool bParentEnabled) const
 {
     static const FSlateColorBrush WhiteBrush(FLinearColor::White);
-    const int32 CurrentStep = SequencerComponent ? SequencerComponent->CurrentStep : 0;
+    const int32 CurrentStep = SequencerComponent ? SequencerComponent->GetCurrentStep() : 0;
 
     FSlateDrawElement::MakeBox(
         OutDrawElements, LayerId,
@@ -54,7 +47,7 @@ int32 USequencerWidget::NativePaint(
                 FVector2D(4.0f, Row * CellHeight),
                 FVector2D(LabelWidth - 4.0f, CellHeight)
             ),
-            RowLabels[Row],
+            RowStyles[Row].Label,
             LabelFont,
             ESlateDrawEffect::None,
             FLinearColor(0.85f, 0.85f, 0.85f)
@@ -73,7 +66,7 @@ int32 USequencerWidget::NativePaint(
             FLinearColor CellColor;
             if (bActive)
             {
-                CellColor = RowColors[Row];
+                CellColor = RowStyles[Row].Color;
                 if (bIsPlayhead)
                     CellColor = FLinearColor::LerpUsingHSV(CellColor, FLinearColor::White, 0.4f);
             }
@@ -180,6 +173,10 @@ FReply USequencerWidget::NativeOnMouseButtonDown(
 void USequencerWidget::InitWidget_Implementation(USequencerData* InData, USequencerComponent* InComponent)
 {
     Super::InitWidget_Implementation(InData, InComponent);
+    if (SequencerData)
+    {
+        SequencerData->OnGridCleared.AddDynamic(this, &USequencerWidget::HandleGridCleared);
+    }
     if (!SequencerComponent) return;
     SequencerComponent->OnStepTriggered.AddDynamic(this, &USequencerWidget::HandleStepTriggered);
     SequencerComponent->OnStepAdvanced.AddDynamic(this, &USequencerWidget::HandleStepAdvanced);
@@ -194,27 +191,27 @@ void USequencerWidget::ToggleStep(int32 Row, int32 Step)
     }
 }
 
-bool USequencerWidget::GetStep(int32 Row, int32 Step) const
-{
-    if (SequencerData)
-    {
-        return SequencerData->GetStep(Row, Step);
-    }
-    return false;
-}
-
 void USequencerWidget::HandleStepTriggered(int32 Row, int32 Step)
 {
     OnStepFired(Row, Step);
 }
 
-void USequencerWidget::HandleStepAdvanced(int32 Step)
+void USequencerWidget::HandleStepAdvanced(int32 /*Step*/)
+{
+    Invalidate(EInvalidateWidgetReason::Paint);
+}
+
+void USequencerWidget::HandleGridCleared()
 {
     Invalidate(EInvalidateWidgetReason::Paint);
 }
 
 void USequencerWidget::NativeDestruct()
 {
+    if (SequencerData)
+    {
+        SequencerData->OnGridCleared.RemoveDynamic(this, &USequencerWidget::HandleGridCleared);
+    }
     if (SequencerComponent)
     {
         SequencerComponent->OnStepTriggered.RemoveDynamic(this, &USequencerWidget::HandleStepTriggered);

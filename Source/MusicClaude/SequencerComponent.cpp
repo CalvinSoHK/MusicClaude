@@ -6,33 +6,23 @@ USequencerComponent::USequencerComponent()
     PrimaryComponentTick.bCanEverTick = false;
 }
 
-void USequencerComponent::BeginPlay()
-{
-    Super::BeginPlay();
-}
-
 void USequencerComponent::StartSequencer(USequencerData* InData)
 {
     if (!InData) return;
-
     SequencerData = InData;
-    CurrentStep = USequencerData::NumSteps - 1;
-
-    GetWorld()->GetTimerManager().SetTimer(
-        StepTimerHandle,
-        this,
-        &USequencerComponent::AdvanceStep,
-        SequencerData->GetStepIntervalSeconds(),
-        true
-    );
+    RestartTimer();
 }
 
 void USequencerComponent::ResetPlayback()
 {
     if (!SequencerData) return;
+    RestartTimer();
+}
 
+void USequencerComponent::RestartTimer()
+{
+    CurrentStep = USequencerData::NumSteps - 1; // Prime so first AdvanceStep wraps to 0
     GetWorld()->GetTimerManager().ClearTimer(StepTimerHandle);
-    CurrentStep = USequencerData::NumSteps - 1;
     GetWorld()->GetTimerManager().SetTimer(
         StepTimerHandle,
         this,

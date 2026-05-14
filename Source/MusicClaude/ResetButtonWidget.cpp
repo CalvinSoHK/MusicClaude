@@ -1,4 +1,5 @@
 #include "ResetButtonWidget.h"
+#include "MusicClaude.h"
 
 void UResetButtonWidget::ResetSequencer()
 {
@@ -8,6 +9,6 @@ void UResetButtonWidget::ResetSequencer()
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("UResetButtonWidget::ResetSequencer called before SequencerComponent was initialized."))
+        UE_LOG(LogMusicClaude, Warning, TEXT("ResetButtonWidget: SequencerComponent not set"))
     }
 }

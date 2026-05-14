@@ -22,16 +22,14 @@ public:
     UPROPERTY(BlueprintAssignable)
     FOnStepTriggered OnStepTriggered;
 
-    UPROPERTY(BlueprintReadOnly)
-    int32 CurrentStep = 0;
+    UFUNCTION(BlueprintPure)
+    int32 GetCurrentStep() const { return CurrentStep; }
 
+    UFUNCTION(BlueprintCallable)
     void StartSequencer(USequencerData* InData);
 
     UFUNCTION(BlueprintCallable)
     void ResetPlayback();
-
-protected:
-    virtual void BeginPlay() override;
 
 private:
     UPROPERTY()
@@ -39,5 +37,8 @@ private:
 
     FTimerHandle StepTimerHandle;
 
+    int32 CurrentStep = 0;
+
+    void RestartTimer();
     void AdvanceStep();
 };

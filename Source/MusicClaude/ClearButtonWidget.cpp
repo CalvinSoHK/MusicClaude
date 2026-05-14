@@ -1,4 +1,5 @@
 #include "ClearButtonWidget.h"
+#include "MusicClaude.h"
 
 void UClearButtonWidget::ClearSequencer()
 {
@@ -8,6 +9,6 @@ void UClearButtonWidget::ClearSequencer()
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("UClearButtonWidget::ClearSequencer called before SequencerData was initialized."))
+        UE_LOG(LogMusicClaude, Warning, TEXT("ClearButtonWidget: SequencerData not set"))
     }
 }

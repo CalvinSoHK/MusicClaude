@@ -14,12 +14,12 @@ class MUSICCLAUDE_API AMusicClaudeGameMode : public AGameModeBase
 public:
     AMusicClaudeGameMode();
 
+protected:
     UPROPERTY(BlueprintReadOnly)
     USequencerData* SequencerData = nullptr;
 
     UPROPERTY(BlueprintReadOnly)
     USequencerComponent* SequencerComponent = nullptr;
 
-protected:
     virtual void BeginPlay() override;
 };

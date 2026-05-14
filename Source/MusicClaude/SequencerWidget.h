@@ -20,9 +20,6 @@ public:
     UFUNCTION(BlueprintCallable)
     void ToggleStep(int32 Row, int32 Step);
 
-    UFUNCTION(BlueprintCallable)
-    bool GetStep(int32 Row, int32 Step) const;
-
     UFUNCTION(BlueprintImplementableEvent)
     void OnStepFired(int32 Row, int32 Step);
 
@@ -42,12 +39,19 @@ protected:
     virtual void NativeDestruct() override;
 
 private:
-    static const FLinearColor RowColors[USequencerData::NumRows];
-    static const FString RowLabels[USequencerData::NumRows];
+    struct FRowStyle
+    {
+        FString Label;
+        FLinearColor Color;
+    };
+    static const FRowStyle RowStyles[USequencerData::NumRows];
 
     UFUNCTION()
     void HandleStepTriggered(int32 Row, int32 Step);
 
     UFUNCTION()
     void HandleStepAdvanced(int32 Step);
+
+    UFUNCTION()
+    void HandleGridCleared();
 };

@@ -13,7 +13,6 @@ public class MusicClaude : ModuleRules
             "Engine",
             "InputCore",
             "UMG",
-            "AudioMixer",
             "SlateCore",
             "Slate"
         });
