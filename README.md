@@ -4,7 +4,7 @@ A DAW-style step sequencer built in Unreal Engine 5, developed as a hands-on pro
 
 ## What It Is
 
-MusicClaude is a music game inspired by FL Studio's step sequencer. A playhead sweeps left to right across a grid, where each row represents an instrument (Kick, Snare, Tom, Hi-Hat). Any node you place on the grid fires that instrument's audio sample when the playhead crosses it. The loop runs continuously, so you hear your pattern play back in real time as you build it.
+MusicClaude is a small music game inspired by FL Studio's step sequencer. Any node you place on the grid fires that instrument's audio sample when the playhead crosses it. The loop will run endlessly so you can hear what you've set up. There is no customization of the instruments, BPM, or line markers. Scope was intentionally kept small.
 
 The interface is entirely custom-painted in C++ using Unreal's Slate layer, with no pre-built UI components. Clicking a cell toggles it on or off. Three buttons round out the controls: reset the playhead, clear the whole grid, and quit.
 
@@ -25,7 +25,7 @@ What's intentionally out:
 
 ## Why This Project Exists
 
-I built this to get comfortable with Unreal Engine 5 C++ coming from five years of Unity and C# development. UE5 is a large, opinionated framework, and I wanted a real project rather than following a tutorial. Something that compiles, runs, and does something tangible.
+I built this to get comfortable with Unreal Engine 5 C++ coming from five years of Unity and C# development. UE5 is a large, opinionated framework, and I wanted something that compiles, runs, and does something tangible.
 
 I used Claude AI as a collaborator throughout, for planning the architecture, writing and reviewing C++, and working through UE5-specific patterns like `UUserWidget` subclassing, delegate binding, and the Slate paint API. The process was as much about developing good habits with AI tooling as it was about shipping the game itself.
 
